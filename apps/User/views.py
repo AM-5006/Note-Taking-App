@@ -41,7 +41,7 @@ def register():
     mongo.db.User.insert_one(user.__dict__)
     return jsonify({'message': 'User registered successfully'}), 201
 
-@user_routes.route('/users', methods=['GET'])
+@user_routes.route('/', methods=['GET'])
 def get_users():
     all_users = list(mongo.db.User.find({}, {'_id': 0, 'password': 0}))
     if len(all_users) == 0:
