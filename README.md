@@ -1,5 +1,23 @@
 # Note-Taking-App
 
+## Overview
+This project is a Flask-based web application designed to provide user authentication and note management functionalities through a RESTful API. The application is structured with modularity in mind, organizing components into different directories for enhanced maintainability. MongoDB is used as the backend database to store both user information and user-created notes.
+
+## Features
+#### User Authentication
+* Register User: Allows users to register with a unique username, providing a name and password.
+* Login User: Validates user credentials and issues a JSON Web Token (JWT) for authentication.
+
+#### Notes Management
+* Create Note: Authenticated users can create notes by providing a title and content.
+* Get User's Notes: Retrieves a list of notes belonging to the authenticated user.
+* Update Note: Allows users to update the title or content of their existing notes.
+* Delete Note: Permits users to delete their own notes.
+
+## Security
+* Password Hashing: User passwords are hashed using the bcrypt algorithm for enhanced security.
+* Token-Based Authentication: JWTs are used to authenticate users, providing a secure and stateless authentication mechanism.
+
 ## Project Structure
 The project is organized as follows:
 ```bash
@@ -52,7 +70,7 @@ The App should now be accessible at http://localhost:8000/
 ## API Documentation
 #### User routes
 
-* Retrieve Users
+* __Retrieve Users__
   - Endpoint: `/`
   - Method: GET
   - Response:
@@ -73,7 +91,8 @@ The App should now be accessible at http://localhost:8000/
         }
         ```
 
-* Register User
+
+* __Register User__
   - Endpoint: `/register`
   - Method: POST
   - Request Body:
@@ -97,7 +116,9 @@ The App should now be accessible at http://localhost:8000/
           "message": "User already exists"
         }
         ```
-* Login User
+
+        
+* __Login User__
   - Endpoint: `/login`
   - Method: POST
   - Request Body:
@@ -127,7 +148,7 @@ __Request__:
   - Headers:
     * `Authorization: Bearer <JWT_TOKEN>`
 
-* Create a Note
+* __Create a Note__
   - URL: `/notes`
   - Method: POST
   - Request Body:
@@ -144,7 +165,9 @@ __Request__:
         "message": "Note created successfully"
       }
       ```
-* Get User's Notes
+
+      
+* __Get User's Notes__
   - URL: `/notes`
   - Method: GET
   - Response:
@@ -171,7 +194,7 @@ __Request__:
         }
         ```
 
-* Delete a Note
+* __Delete a Note__
   - URL: `/notes/<note_id>`
   - Method: DELETE
   - Response:
@@ -187,7 +210,9 @@ __Request__:
           "message": "Note not found"
         }
         ```
-* Update a Note
+
+        
+* __Update a Note__
   - URL: `/notes/<note_id>`
   - Method: PATCH
   - Request Body:
