@@ -18,6 +18,10 @@ This project is a Flask-based web application designed to provide user authentic
 * Password Hashing: User passwords are hashed using the bcrypt algorithm for enhanced security.
 * Token-Based Authentication: JWTs are used to authenticate users, providing a secure and stateless authentication mechanism.
 
+## Deployment
+The Note-Taking-App is deployed and accessible online. You can try it out by visiting the following link:
+[Live Demo](https://note-taking-app-x089.onrender.com/)
+
 ## Project Structure
 The project is organized as follows:
 ```bash
