@@ -48,4 +48,4 @@ def get_users():
         return jsonify({'message': 'No registered users yet'})
 
     all_users = json.loads(json_util.dumps(all_users))
-    return jsonify({'notes': all_users}), 200
+    return jsonify({'All Users': all_users}), 200
