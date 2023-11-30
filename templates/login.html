@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}
+    Login
+{% endblock title%}
+
+{%block style%}
+<link rel="stylesheet" href="static/style.css">
+{%endblock style%}
+
+{% block body %}
+
+{% if message %}
+<div class="alert alert-warning" role="alert">
+	{{ message }}
+</div>
+{% endif %}
+
+<nav class="main-nav">
+	<ul>
+		<li><a class="signin" href="#0">Sign in</a></li>
+		<li><a class="signup" href="#0">Sign up</a></li>
+	</ul>
+</nav>
+
+<div class="user-modal">
+		<div class="user-modal-container">
+			<ul class="switcher">
+				<li><a href="#0">Sign in</a></li>
+				<li><a href="#0">New account</a></li>
+			</ul>
+
+			<div id="login">
+				<form class="form">
+					<p class="fieldset">
+						<label class="image-replace email" for="signin-email">E-mail</label>
+						<input class="full-width has-padding has-border" id="signin-email" type="text" placeholder="E-mail or Username">
+						<span class="error-message">An account with this email address does not exist!</span>
+					</p>
+					<p class="fieldset">
+						<label class="image-replace password" for="signin-password">Password</label>
+						<input class="full-width has-padding has-border" id="signin-password" type="password"  placeholder="Password">
+						<a href="#0" class="hide-password">Show</a>
+						<span class="error-message">Wrong password! Try again.</span>
+					</p>
+					<p class="fieldset">
+						<input type="checkbox" id="remember-me" checked>
+						<label for="remember-me">Remember me</label>
+					</p>
+					<p class="fieldset">
+						<input class="full-width" type="submit" value="Login">
+					</p>
+				</form>
+				<p class="form-bottom-message"><a href="#0">Forgot your password?</a></p>
+			</div>
+
+			<div id="signup">
+				<form class="form">
+					<p class="fieldset">
+						<label class="image-replace username" for="signup-name">Name</label>
+						<input class="full-width has-padding has-border" id="signup-name" type="text" placeholder="Name" required>
+						<span class="error-message">Your username can only contain numeric and alphabetic symbols!</span>
+					</p>
+
+					<p class="fieldset">
+						<label class="image-replace email" for="signup-email">E-mail</label>
+						<input class="full-width has-padding has-border" id="signup-email" type="email" placeholder="E-mail" required>
+						<span class="error-message">Enter a valid email address!</span>
+					</p>
+
+					<p class="fieldset">
+						<label class="image-replace password" for="signup-password">Password</label>
+						<input class="full-width has-padding has-border" id="signup-password" type="password"  placeholder="Password" required>
+						<a href="#0" class="hide-password">Show</a>
+						<span class="error-message">Your password has to be at least 6 characters long!</span>
+					</p>
+
+					<p class="fieldset">
+						<input type="checkbox" id="accept-terms">
+						<label for="accept-terms">I agree to the <a class="accept-terms" href="#0">Terms</a></label>
+					</p>
+
+					<p class="fieldset">
+						<input class="full-width has-padding" type="submit" value="Create account">
+					</p>
+				</form>
+			</div>
+
+			<div id="reset-password">
+				<p class="form-message">Lost your password? Please enter your email address.</br> You will receive a link to create a new password.</p>
+				<form class="form">
+					<p class="fieldset">
+						<label class="image-replace email" for="reset-email">E-mail</label>
+						<input class="full-width has-padding has-border" id="reset-email" type="email" placeholder="E-mail">
+						<span class="error-message">An account with this email does not exist!</span>
+					</p>
+					<p class="fieldset">
+						<input class="full-width has-padding" type="submit" value="Reset password">
+					</p>
+				</form>
+
+				<p class="form-bottom-message"><a href="#0">Back to log-in</a></p>
+			</div>
+			<a href="#0" class="close-form">Close</a>
+		</div>
+</div>
+{% endblock body %}
+
+{%block script%}
+<script src="static/script.js"></script>
+<script>
+    function login_selected(){
+        let $form_modal = $('.user-modal'),
+        $form_login = $form_modal.find('#login'),
+        $form_signup = $form_modal.find('#signup'),
+        $form_forgot_password = $form_modal.find('#reset-password'),
+        $form_modal_tab = $('.switcher'),
+        $tab_login = $form_modal_tab.children('li').eq(0).children('a'),
+        $tab_signup = $form_modal_tab.children('li').eq(1).children('a'),
+        
+        $main_nav = $('.main-nav');
+        $form_login.addClass('is-selected');
+        $form_signup.removeClass('is-selected');
+        $form_forgot_password.removeClass('is-selected');
+        $tab_login.addClass('selected');
+        $tab_signup.removeClass('selected');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('login').addEventListener('submit', function (event) {
+            event.preventDefault();
+    
+            const identifier = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+    
+            fetch(`/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ identifier: identifier, password: password }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Invalid credentials');
+                }
+            })
+            .then(data => {
+                console.log('Login successful:', data.token);
+                window.location.href = '/';
+            })
+            .catch(error => {
+                console.error('Login error:', error.message);
+            });
+        });
+
+        document.getElementById('signup').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+
+            fetch(`/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name, email: email, password: password }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Signup successful');
+                    document.getElementById('signup-name').value = null;
+                    document.getElementById('signup-email').value = null;
+                    document.getElementById('signup-password').value = null;
+                    login_selected();
+                } else if (response.status === 400) {
+                    throw new Error('User already exists');
+                } else {
+                    throw new Error('Signup failed');
+                }
+            })
+            .catch(error => {
+                console.error('Signup error:', error.message);
+            });
+        });
+    });
+</script>
+{%endblock script%}

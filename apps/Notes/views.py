@@ -4,7 +4,6 @@ import datetime
 from functools import wraps
 import bcrypt
 from bson import ObjectId, json_util
-from functools import wraps
 import json
 
 from database.database import mongo
@@ -36,8 +35,10 @@ def create_note(username):
     data = request.get_json()
     title = data.get('title')
     content = data.get('content')
-    
-    note = Note(title=title, content=content, user_id=username)
+    date_created = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    date_modified = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+
+    note = Note(title=title, content=content, user_id=username, date_created=date_created, date_modified=date_modified)
     mongo.db.Notes.insert_one(note.__dict__)
 
     return jsonify({'message': 'Note created successfully'}), 201
@@ -71,7 +72,7 @@ def update_note(username, note_id):
     data = request.get_json()
     title = data.get('title')
     content = data.get('content')
-
+    
     note = mongo.db.Notes.find_one({'_id': ObjectId(note_id), 'user_id': username})
     if note is None:
         return jsonify({'message': 'Note not found'}), 404
@@ -81,9 +82,10 @@ def update_note(username, note_id):
         update_data['title'] = title
     if content is not None:
         update_data['content'] = content
-
+    
+    update_data['date_modified'] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
     if update_data:
         mongo.db.Notes.update_one({'_id': ObjectId(note_id)}, {'$set': update_data})
-        return jsonify({'message': 'Note updated successfully'})
+        return jsonify({'message': 'Note updated successfully'}), 200
     else:
         return jsonify({'message': 'No fields to update'}), 400

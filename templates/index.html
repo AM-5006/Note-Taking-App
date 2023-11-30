@@ -1,0 +1,578 @@
+{% extends "base.html" %}
+{% block title %}
+    Home
+{% endblock title%}
+
+{%block style%}
+<style>
+    .card-body {
+        height: 150px;
+        overflow: hidden;
+        transition: height 0.3s ease-in-out;
+    }
+
+    .card.slide-out {
+        height: 0;
+        margin: 0;
+        padding: 0;
+        border: none;
+        transition: height 0.3s ease-in-out; /* Add the same transition for the 'slide-out' state */
+    }
+
+    .short-card {
+        background: linear-gradient(45deg, #adadad, #7d02ad);
+        color: #fff; 
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+        border: none;
+        opacity: 0.9;
+    }
+
+    .card {
+        border-radius: 50px; 
+    }
+
+    .overflow-hidden {
+        overflow: hidden;
+        max-height: 2.0em; /* Adjust the max-height to control the visible lines */
+        line-height: 1.0em; /* Match the line-height for a consistent appearance */
+    }
+
+    .title-style {
+        font-family: "Times New Roman", Times, serif;
+        color: black; 
+    }    
+
+    .page_404 {
+        padding: 40px 0;
+        background: #fff;
+        font-family: "Arvo", serif;
+    }
+    
+    .page_404 img {
+    width: 100%;
+    }
+
+    .four_zero_four_bg {
+    background-image: url('static/404.gif');
+    height: 300px;
+    background-position: center;
+    }
+
+    .four_zero_four_bg h1 {
+    font-size: 80px;
+    }
+
+    .four_zero_four_bg h3 {
+    font-size: 80px;
+    }
+
+    .link_404 {
+    color: #fff !important;
+    padding: 10px 20px;
+    background: #39ac31;
+    margin: 20px 0;
+    display: inline-block;
+    text-decoration: none;
+    }
+
+    .contanr_box_404 {
+    margin-top: -50px;
+    }
+
+    .custom-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .custom-btn {
+        background-color: transparent;
+        border: 1px solid #28a745;
+        color: #28a745;
+        padding: 6px 12px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .custom-dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #fff;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+    }
+
+    .custom-dropdown-item {
+        white-space: nowrap; /* Ensures each link appears on a single line */
+        padding: 10px;
+        text-decoration: none;
+        display: block;
+        color: #333;
+    }
+
+    .custom-dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .custom-dropdown-divider {
+        border-top: 1px solid #ddd;
+    }
+
+    .custom-dropdown-item.disabled-link {
+        pointer-events: none;
+
+    }
+</style>
+{%endblock style%}
+
+{% block body %}
+<nav class="navbar navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">
+        <i class="fas fa-book"></i>
+    </a>
+    <div class="navbar-text mx-auto text-light font-weight-bold">
+        Note-Taking App
+    </div>
+    {% if user_logged_in %}
+    <div class="custom-dropdown">
+        <button type="button" class="custom-btn" onclick="toggleDropdown()">
+            <i class="fas fa-user"></i>
+        </button>
+        <div class="custom-dropdown-content" id="dropdownMenu">
+            <a class="custom-dropdown-item disabled-link" href="#"><strong>Username:</strong> {{ user_details['username'] }}</a>
+            <a class="custom-dropdown-item disabled-link" href="#"><strong>Name:</strong> {{ user_details['name'] }}</a>
+            <a class="custom-dropdown-item disabled-link" href="#"><strong>Email:</strong> {{ user_details['email'] }}</a>
+            <div class="custom-dropdown-divider"></div>
+            <a class="custom-dropdown-item" href="{{ 'logout' }}">Log Out</a>
+        </div>
+    </div>
+    {% else %}
+    <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="loginButton">Log in</button>
+    {% endif %}
+</nav>
+<div id="alertContainer" class="container mt-4"></div>
+<div id="notesContainer" class="container mt-4">
+</div>
+
+{% if user_logged_in %}
+    <!-- Modal for Adding Note -->
+    <div class="modal fade" id="addNoteModal" tabindex="-1" role="dialog" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addNoteModalLabel">Add Note</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form for adding a new note -->
+                    <form id="addNoteForm">
+                        <div class="form-group">
+                            <label for="noteTitle">Title</label>
+                            <input type="text" class="form-control" id="noteTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="noteContent">Content</label>
+                            <textarea class="form-control" id="noteContent" rows="12" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Note</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for displaying card details -->
+    <div class="modal fade" id="cardDetailsModal" tabindex="-1" role="dialog" aria-labelledby="cardDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cardDetailsModalLabel"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="cardDetailsModalBody">
+                    <!-- Content will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Modal -->
+    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateModalLabel">Update Note</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateNoteForm">
+                        <div class="form-group">
+                            <label for="updateTitle">Title</label>
+                            <input type="text" class="form-control" id="updateTitle">
+                        </div>
+                        <div class="form-group">
+                            <label for="updateContent">Content</label>
+                            <textarea class="form-control" id="updateContent" rows="12"></textarea>
+                        </div>
+                        <button type="submit" id="updateButton" class="btn btn-primary">Update Note</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+    <div class="d-flex justify-content-end fixed-bottom mr-4 mb-4">
+        <button type="button" class="btn btn-primary rounded-circle" id="addNoteButton" data-toggle="modal" data-target="#addNoteModal">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+{% endblock body %}
+
+
+{%block script%}
+<script src="/static/admin-lte/plugins/bootstrap/js/bootstrap.bundle.min.js "></script>
+<script>
+    {% if not user_logged_in %}
+        document.getElementById("addNoteButton").addEventListener("click", function () {
+            window.location.href = "/loginpage";
+        });
+        document.getElementById("loginButton").addEventListener("click", function () {
+            window.location.href = "/loginpage";
+        });
+        const notesContainer = document.getElementById('notesContainer');
+        notesContainer.innerHTML = '';
+
+        const section404 = document.createElement('section');
+        section404.classList.add('page_404');
+        
+        const container404 = document.createElement('div');
+        container404.classList.add('container', 'd-flex', 'align-items-center', 'justify-content-center');
+        
+        const row404 = document.createElement('div');
+        row404.classList.add('row');
+        
+        const col404 = document.createElement('div');
+        col404.classList.add('col-sm-12');
+        
+        const innerCol404 = document.createElement('div');
+        innerCol404.classList.add('col-sm-10', 'col-sm-offset-1', 'text-center');
+        
+        const fourZeroFourBg = document.createElement('div');
+        fourZeroFourBg.classList.add('four_zero_four_bg');
+        
+        const contentBox404 = document.createElement('div');
+        contentBox404.classList.add('contant', 'box_404');
+        
+        const h3Element = document.createElement('h3');
+        h3Element.classList.add('h2');
+        h3Element.innerText = 'Looks like you have not added any notes yet.';
+        
+        const pElement = document.createElement('p');
+        pElement.innerText = 'Add your first note by clicking the button at the bottom';
+        
+        contentBox404.appendChild(h3Element);
+        contentBox404.appendChild(pElement);
+        
+        innerCol404.appendChild(fourZeroFourBg);
+        innerCol404.appendChild(contentBox404);
+        
+        col404.appendChild(innerCol404);
+        row404.appendChild(col404);
+        container404.appendChild(row404);
+        section404.appendChild(container404);
+        notesContainer.appendChild(section404); 
+    {% else %}
+        function fetchUserNotes() {
+            fetch('/notes', {
+                method: 'GET',
+                headers: {
+                    'Authorization': '{{ user_token }}' 
+                }
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/loginpage?message=Session%20expired.%20Please%20login%20again.';
+                }
+                return response.json();
+            })
+            .then(data => {
+                if ('notes' in data) {
+                    displayNotes(data.notes);
+                 } else {
+                    displayNotes(null)
+                    console.log('No notes found');
+                }
+            })
+            .catch(error => console.error('Error fetching notes:', error));
+        }
+
+        function displayNotes(notes) {
+            const notesContainer = document.getElementById('notesContainer');
+            notesContainer.innerHTML = '';
+
+            if (notes === null) {
+                notesContainer.innerHTML = '';
+
+                const section404 = document.createElement('section');
+                section404.classList.add('page_404');
+                
+                const container404 = document.createElement('div');
+                container404.classList.add('container', 'd-flex', 'align-items-center', 'justify-content-center');
+                
+                const row404 = document.createElement('div');
+                row404.classList.add('row');
+                
+                const col404 = document.createElement('div');
+                col404.classList.add('col-sm-12');
+                
+                const innerCol404 = document.createElement('div');
+                innerCol404.classList.add('col-sm-10', 'col-sm-offset-1', 'text-center');
+                
+                const fourZeroFourBg = document.createElement('div');
+                fourZeroFourBg.classList.add('four_zero_four_bg');
+                
+                const contentBox404 = document.createElement('div');
+                contentBox404.classList.add('contant', 'box_404');
+                
+                const h3Element = document.createElement('h3');
+                h3Element.classList.add('h2');
+                h3Element.innerText = 'Looks like you have not added any notes yet.';
+                
+                const pElement = document.createElement('p');
+                pElement.innerText = 'Add your first note by clicking the button at the bottom';
+                
+                contentBox404.appendChild(h3Element);
+                contentBox404.appendChild(pElement);
+                
+                innerCol404.appendChild(fourZeroFourBg);
+                innerCol404.appendChild(contentBox404);
+                
+                col404.appendChild(innerCol404);
+                row404.appendChild(col404);
+                container404.appendChild(row404);
+                section404.appendChild(container404);
+                notesContainer.appendChild(section404);                
+            }else{
+                notes.forEach(note => {
+                    const card = document.createElement('div');
+                    card.classList.add('card', 'mb-3', 'rounded', 'short-card');
+            
+                    const cardBody = document.createElement('div');
+                    cardBody.classList.add('card-body');
+            
+                    const cardTitle = document.createElement('h5');
+                    cardTitle.classList.add('card-title', 'font-weight-bold', 'title-style');
+                    cardTitle.innerText = note.title;
+            
+                    const cardContent = document.createElement('p');
+                    cardContent.classList.add('card-text', 'text-dark', 'overflow-hidden');
+                    const firstTwoLines = note.content.split('\n').slice(0, 2).join('\n');
+                    cardContent.innerText = firstTwoLines;
+    
+                    card.addEventListener('click', function () {
+                        populateCardDetailsModal(note);
+                        $('#cardDetailsModal').modal('show');
+                    });
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('btn', 'btn-danger', 'float-right');
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', function () {
+                        event.stopPropagation();
+                        card.classList.add('slide-out');
+                        setTimeout(function () {
+                            card.remove();
+                        }, 300);
+                        handleDelete(note._id.$oid);
+                    });
+            
+                    const updateButton = document.createElement('button');
+                    updateButton.classList.add('btn', 'btn-warning', 'float-right', 'mr-2');
+                    updateButton.innerHTML = '<i class="fas fa-edit"></i>';
+                    updateButton.addEventListener('click', function () {
+                        event.stopPropagation();
+                        openUpdateModal(note);
+                    });
+            
+                    cardBody.appendChild(cardTitle);
+                    cardBody.appendChild(cardContent);
+                    cardBody.appendChild(deleteButton);
+                    cardBody.appendChild(updateButton);
+                    card.appendChild(cardBody);
+            
+                    notesContainer.appendChild(card);
+                });
+            }
+        }
+
+        function openUpdateModal(note) {
+            const updateModal = document.getElementById('updateModal');
+            const updateTitleInput = document.getElementById('updateTitle');
+            const updateContentTextarea = document.getElementById('updateContent');
+            const updateButton = document.getElementById('updateButton'); 
+            
+            updateTitleInput.value = note.title;
+            updateContentTextarea.value = note.content;
+            
+            
+            $('#updateModal').modal('show');
+            updateButton.addEventListener('click', function () {
+                const updatedTitle = updateTitleInput.value;
+                const updatedContent = updateContentTextarea.value;
+                $('#updateModal').modal('hide');
+                updateNote(note._id.$oid, updatedTitle, updatedContent);
+            });
+        }
+        
+        function updateNote(noteId, updatedTitle, updatedContent) {
+            const requestBody = {
+                title: updatedTitle,
+                content: updatedContent
+            };
+        
+            fetch('/notes/' + noteId, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': '{{ user_token }}'
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update note');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Note updated successfully:', data);
+            })
+            .catch(error => {
+                console.error('Error updating note:', error);
+            });
+        }
+        
+        function populateCardDetailsModal(note) {
+            const modalTitle = document.getElementById('cardDetailsModalLabel');
+            const modalBody = document.getElementById('cardDetailsModalBody');
+        
+            modalTitle.innerHTML = `<h2 style="font-weight: bold;">${note.title}</h2>`;
+        
+            const containerDiv = document.createElement('div');
+            containerDiv.style.display = 'flex';
+            containerDiv.style.flexDirection = 'column';
+        
+            const transparentDiv = document.createElement('div');
+            transparentDiv.style.backgroundColor = 'rgba(125, 2, 173, 0.4)';
+            transparentDiv.style.padding = '10px';
+            transparentDiv.style.borderRadius = '10px';
+            transparentDiv.style.border = '2px solid #7D02AD'; // Solid border
+            transparentDiv.style.fontStyle = 'italic'; // Set content to italic
+        
+            transparentDiv.innerHTML = `<p style="margin-bottom: 20px;">${note.content}</p>`; // Increased margin
+        
+            const dateCreatedElement = document.createElement('p');
+            dateCreatedElement.innerText = `Date Created: ${note.date_created}`;
+            dateCreatedElement.style.fontSize = 'small';
+            dateCreatedElement.style.marginTop = 'auto'; // Push to the bottom
+            dateCreatedElement.style.color = '#696969'; // Change font color to green or any other color
+        
+            const dateModifiedElement = document.createElement('p');
+            dateModifiedElement.innerText = `Last Modified: ${note.date_modified}`;
+            dateModifiedElement.style.fontSize = 'small';
+            dateModifiedElement.style.marginTop = '2px'; // Small margin between date elements
+            dateModifiedElement.style.color = '#696969'; // Change font color to green or any other color
+        
+            containerDiv.appendChild(transparentDiv);
+            containerDiv.appendChild(dateCreatedElement);
+            containerDiv.appendChild(dateModifiedElement);
+        
+            modalBody.innerHTML = '';
+            modalBody.appendChild(containerDiv);
+        }
+        
+        function handleDelete(noteId) {
+            fetch(`/notes/${noteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': '{{ user_token }}'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete note');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Note deleted successfully:', data);
+                window.location.href = '/';
+            })
+            .catch(error => {
+                console.error('Error deleting note:', error.message());
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const addNoteForm = document.getElementById('addNoteForm');
+    
+            addNoteForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+    
+                const noteTitle = document.getElementById('noteTitle').value;
+                const noteContent = document.getElementById('noteContent').value;
+    
+                const requestBody = {
+                    title: noteTitle,
+                    content: noteContent
+                };
+    
+                fetch('/notes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': '{{ user_token }}'
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to add note');
+                    }
+                })
+                .then(data => {
+                    window.location.href = '/';
+                    document.getElementById('noteTitle').value = null;
+                    document.getElementById('noteContent').value = null;
+                    console.log(data.message); 
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+            });
+
+        });
+
+        function toggleDropdown() {
+            var dropdown = document.getElementById("dropdownMenu");
+            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+            
+            var button = document.querySelector('.custom-btn');
+            var rect = button.getBoundingClientRect();
+            
+            dropdown.style.left = button.offsetWidth - dropdown.offsetWidth + "px";
+        }
+
+        window.addEventListener('load', fetchUserNotes);
+    {% endif %}
+</script>
+
+{%endblock script%}
