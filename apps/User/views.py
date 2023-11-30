@@ -67,4 +67,3 @@ def get_users():
 
     all_users = json.loads(json_util.dumps(all_users))
     return jsonify({'All Users': all_users}), 200
-
